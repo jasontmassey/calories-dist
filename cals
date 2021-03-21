@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+
+# set daily_cals to default if not set by $1
+if [[ $1 == "" ]]; then
+    daily_cals=1850
+else
+    daily_cals=$1
+fi
+
+weekly_cals=$((daily_cals * 7))
+weekday_cals=$(dc -e "0k $weekly_cals 2/ p")
+weekend_cals=$weekday_cals
+
+# -------------------------------------------
+# calculation
+# -------------------------------------------
+declare -A day_calories
+
+day_calories["sunday"]=1000
+
+if (( ${day_calories["sunday"]} > $daily_cals )); then
+    echo daily calories \($daily_cals\) must be at least sunday\'s \(${day_calories["sunday"]}\)
+    exit 1
+fi
+
+for d in monday tuesday wednesday thursday; do
+    day_calories["$d"]=$(dc -e "0k $weekday_cals 4/ p")
+done
+
+fri_sat_cals=$(dc -e "0k $weekend_cals ${day_calories["sunday"]}- p")
+
+day_calories["friday"]=$(dc -e "0k $fri_sat_cals 2/ p")
+day_calories["saturday"]=${day_calories["friday"]}
+
+# -------------------------------------------
+# output
+# -------------------------------------------
+echo daily calories: $daily_cals
+echo weekly calories: $weekly_cals
+echo weekdays calories: $weekday_cals
+echo weekend calories: $weekend_cals
+
+sum=0
+for d in sunday monday tuesday wednesday thursday friday saturday; do
+    echo $d ${day_calories["$d"]}
+    sum=$((sum + ${day_calories["$d"]}))
+done
+
+echo missing calories: $(( weekly_cals - sum ))
