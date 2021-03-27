@@ -1,22 +1,55 @@
 #!/usr/bin/env bash
+# ----------------------------------------------------------------------------
+DAILY_CALS_DEFAULT=1850
+SUNDAY_CALS_DEFAULT=1000
 
-# set daily_cals to default if not set by $1
-if [[ $1 == "" ]]; then
-    daily_cals=1850
-else
-    daily_cals=$1
-fi
+function usage
+{
+    cat <<EOF >&2
+$(basename $0) [-d <daily-cals=$DAILY_CALS_DEFAULT>] [-s <sunday-cals=$SUNDAY_CALS_DEFAULT>]
+$(basename $0) {-h | --help}
+
+    -d specifies the average daily intake, default=$DAILY_CALS_DEFAULT
+    -h print this help/usage information
+    -s specifies calories for Sunday, default=$SUNDAY_CALS_DEFAULT
+EOF
+}
+
+case $1 in -h|--help)
+    usage
+    exit 0
+    ;;
+esac
+
+# ----------------------------------------------------------------------------
+declare -A day_calories
+
+# establish defaults
+day_calories["sunday"]=$SUNDAY_CALS_DEFAULT
+daily_cals=$DAILY_CALS_DEFAULT
+
+# parse command-line options, which override defaults
+while getopts "d:s:" option; do
+    case $option in
+		d)
+			daily_cals=$OPTARG
+			;;
+        s)
+            day_calories["sunday"]=$OPTARG
+            ;;
+    esac
+done
+
+# shift non-option arguments to begin at $1
+shift $(( OPTIND - 1 ))
 
 weekly_cals=$((daily_cals * 7))
 weekday_cals=$(dc -e "0k $weekly_cals 2/ p")
 weekend_cals=$weekday_cals
 
-# -------------------------------------------
+# ----------------------------------------------------------------------------
 # calculation
-# -------------------------------------------
-declare -A day_calories
-
-day_calories["sunday"]=1000
+# ----------------------------------------------------------------------------
 
 if (( ${day_calories["sunday"]} > $daily_cals )); then
     echo daily calories \($daily_cals\) must be at least sunday\'s \(${day_calories["sunday"]}\)
@@ -32,9 +65,9 @@ fri_sat_cals=$(dc -e "0k $weekend_cals ${day_calories["sunday"]}- p")
 day_calories["friday"]=$(dc -e "0k $fri_sat_cals 2/ p")
 day_calories["saturday"]=${day_calories["friday"]}
 
-# -------------------------------------------
+# ----------------------------------------------------------------------------
 # output
-# -------------------------------------------
+# ----------------------------------------------------------------------------
 echo daily calories: $daily_cals
 echo weekly calories: $weekly_cals
 echo weekdays calories: $weekday_cals
