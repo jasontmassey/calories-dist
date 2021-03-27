@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # ----------------------------------------------------------------------------
 DAILY_CALS_DEFAULT=1850
-SUNDAY_CALS_DEFAULT=1000
+SUNDAY_CALS_DEFAULT=620
 
 function usage
 {
