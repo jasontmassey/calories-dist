@@ -31,9 +31,9 @@ daily_cals=$DAILY_CALS_DEFAULT
 # parse command-line options, which override defaults
 while getopts "d:s:" option; do
     case $option in
-		d)
-			daily_cals=$OPTARG
-			;;
+        d)
+            daily_cals=$OPTARG
+            ;;
         s)
             day_calories["sunday"]=$OPTARG
             ;;
